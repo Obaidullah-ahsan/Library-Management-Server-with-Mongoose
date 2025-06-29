@@ -1,6 +1,5 @@
 import express, { Request, Response } from "express";
 import { Books } from "../models/book.model";
-import mongoose from "mongoose";
 import { Borrow } from "../models/borrow.model";
 
 export const borrowRouter = express.Router();
