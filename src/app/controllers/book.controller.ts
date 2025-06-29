@@ -14,7 +14,6 @@ bookRouter.get("/", async (req: Request, res: Response) => {
   if (sortBy) {
     sortCondition[sortBy as string] = 1; // ascending
   }
-  // This route can be used to fetch all books or search/filter them
   const data = await Books.find(filter).sort(sortCondition).limit(parsedLimit);
   res.status(201).json({
     success: true,
@@ -22,15 +21,43 @@ bookRouter.get("/", async (req: Request, res: Response) => {
     data,
   });
 });
+bookRouter.get("/:bookId", async (req: Request, res: Response) => {
+  const { bookId } = req.params;
+  const data = await Books.findById(bookId);
+  res.status(201).json({
+    success: true,
+    message: "Books retrieved successfully",
+    data,
+  });
+});
+bookRouter.put("/:bookId", async (req: Request, res: Response) => {
+  const { bookId } = req.params;
+  const body = req.body;
+  const data = await Books.findByIdAndUpdate(bookId, body, { new: true });
+  res.status(201).json({
+    success: true,
+    message: "Book updated successfully",
+    data,
+  });
+});
+bookRouter.delete("/:bookId", async (req: Request, res: Response) => {
+  const { bookId } = req.params;
+  const data = await Books.findByIdAndDelete(bookId);
+  res.status(201).json({
+    success: true,
+    message: "Book deleted successfully",
+    data: null,
+  });
+});
 
 bookRouter.post("/", async (req: Request, res: Response) => {
   try {
     const body = req.body;
-    const book = await Books.create(body);
+    const data = await Books.create(body);
     res.status(201).json({
       success: true,
       message: "Book created successfully",
-      data: book,
+      data,
     });
   } catch (error) {
     res.status(400).json({
