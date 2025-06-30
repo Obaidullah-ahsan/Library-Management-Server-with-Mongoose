@@ -4,7 +4,7 @@ import { Books } from "./book.model";
 
 const borrowSchema = new Schema<IBorrow, borrowStaticMethod>(
   {
-    book: { type: Schema.Types.ObjectId, required: true },
+    book: { type: Schema.Types.ObjectId, ref: "Books", required: true },
     quantity: {
       type: Number,
       required: true,
@@ -23,4 +23,7 @@ borrowSchema.static("updateAvailability", async function (bookId: string) {
   }
 });
 
-export const Borrow = model<IBorrow, borrowStaticMethod>("Borrow", borrowSchema);
+export const Borrow = model<IBorrow, borrowStaticMethod>(
+  "Borrow",
+  borrowSchema
+);
