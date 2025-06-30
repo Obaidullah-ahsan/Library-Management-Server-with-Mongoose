@@ -1,8 +1,8 @@
 import { model, Schema } from "mongoose";
-import { IBorrow } from "../interfaces/borrow.interfaces";
+import { borrowStaticMethod, IBorrow } from "../interfaces/borrow.interfaces";
+import { Books } from "./book.model";
 
-
-const borrowSchema = new Schema<IBorrow>(
+const borrowSchema = new Schema<IBorrow, borrowStaticMethod>(
   {
     book: { type: Schema.Types.ObjectId, required: true },
     quantity: {
@@ -15,4 +15,12 @@ const borrowSchema = new Schema<IBorrow>(
   { versionKey: false, timestamps: true }
 );
 
-export const Borrow = model("Borrow", borrowSchema)
+borrowSchema.static("updateAvailability", async function (bookId: string) {
+  const book = await Books.findById(bookId);
+  if (book) {
+    const isAvailable = book.copies > 0;
+    await Books.findByIdAndUpdate(bookId, { available: isAvailable });
+  }
+});
+
+export const Borrow = model<IBorrow, borrowStaticMethod>("Borrow", borrowSchema);

@@ -18,7 +18,9 @@ borrowRouter.post("/", async (req: Request, res: Response) => {
         data,
       });
       // Update the book's available copies
-      await Books.findByIdAndUpdate(bookId, { $inc: { copies: -orderQuantity } });
+      await Books.findByIdAndUpdate(bookId, {
+        $inc: { copies: -orderQuantity },
+      });
     } catch (error) {
       res.status(400).json({
         message: "Validation failed",
@@ -26,6 +28,12 @@ borrowRouter.post("/", async (req: Request, res: Response) => {
         error,
       });
     }
+  } else if (data && typeof data.copies === "number" && data.copies === 0) {
+    await Borrow.updateAvailability(bookId);
+    res.status(400).json({
+      success: false,
+      message: "Book is not available.",
+    });
   } else {
     // Handle the case where the book is not found or copies is undefined
     res.status(400).json({
