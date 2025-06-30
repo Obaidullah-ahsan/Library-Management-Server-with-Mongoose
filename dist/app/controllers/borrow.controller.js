@@ -17,6 +17,25 @@ const express_1 = __importDefault(require("express"));
 const book_model_1 = require("../models/book.model");
 const borrow_model_1 = require("../models/borrow.model");
 exports.borrowRouter = express_1.default.Router();
+exports.borrowRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = yield borrow_model_1.Borrow.aggregate([
+        { $group: { _id: "$book", totalQuantity: { $sum: "$quantity" } } },
+        {
+            $lookup: {
+                from: "books",
+                localField: "_id",
+                foreignField: "_id",
+                as: "book",
+            },
+        },
+        { $project: { "book.title": 1, "book.isbn": 1, totalQuantity: 1, _id: 0 } },
+    ]);
+    res.status(201).json({
+        success: true,
+        message: "Borrowed books summary retrieved successfully",
+        data,
+    });
+}));
 exports.borrowRouter.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const borrow = req.body;
     const bookId = borrow.book;
@@ -31,7 +50,9 @@ exports.borrowRouter.post("/", (req, res) => __awaiter(void 0, void 0, void 0, f
                 data,
             });
             // Update the book's available copies
-            yield book_model_1.Books.findByIdAndUpdate(bookId, { $inc: { copies: -orderQuantity } });
+            yield book_model_1.Books.findByIdAndUpdate(bookId, {
+                $inc: { copies: -orderQuantity },
+            });
         }
         catch (error) {
             res.status(400).json({
@@ -40,6 +61,13 @@ exports.borrowRouter.post("/", (req, res) => __awaiter(void 0, void 0, void 0, f
                 error,
             });
         }
+    }
+    else if (data && typeof data.copies === "number" && data.copies === 0) {
+        yield borrow_model_1.Borrow.updateAvailability(bookId);
+        res.status(400).json({
+            success: false,
+            message: "Book is not available.",
+        });
     }
     else {
         // Handle the case where the book is not found or copies is undefined
